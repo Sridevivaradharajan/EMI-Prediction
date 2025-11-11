@@ -168,6 +168,22 @@ load_custom_css()
 # GOOGLE DRIVE DOWNLOAD FUNCTIONS
 # ============================================================================
 # Alternative: Load from folder
+def setup_model_directory():
+    """
+    Creates a temporary directory to store downloaded models.
+    Returns: Absolute path of the created directory.
+    """
+    import tempfile
+    import os
+
+    temp_dir = tempfile.mkdtemp(prefix="emi_models_")
+    
+    # Ensure directory exists
+    if not os.path.exists(temp_dir):
+        os.makedirs(temp_dir)
+
+    return temp_dir
+
 @st.cache_resource
 def load_models_from_gdrive_folder():
     """Load all models from a shared Google Drive folder"""
@@ -585,5 +601,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
