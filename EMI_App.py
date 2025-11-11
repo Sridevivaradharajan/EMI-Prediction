@@ -228,21 +228,13 @@ def load_models_from_gdrive_folder():
             if not saved_models_path:
                 saved_models_path = models_dir
 
-            # ✅ Classification model
-            clf_files = [f for f in os.listdir(saved_models_path)
-                         if 'classification_model' in f and f.endswith('.pkl')]
-            if len(clf_files) == 0:
-                st.error("❌ Classification model file not found.")
-                return None
-            clf_model = joblib.load(os.path.join(saved_models_path, clf_files[0]))
+            classification_model_name = "best_classification_model_Stacking_Ensemble.pkl"
+            regression_model_name = "best_regression_model_XGBoost.pkl"
+            
+            # ✅ Load models
+            clf_model = joblib.load(os.path.join(saved_models_path, classification_model_name))
+            reg_model = joblib.load(os.path.join(saved_models_path, regression_model_name))
 
-            # ✅ Regression model
-            reg_files = [f for f in os.listdir(saved_models_path)
-                         if 'regression_model' in f and f.endswith('.pkl')]
-            if len(reg_files) == 0:
-                st.error("❌ Regression model file not found.")
-                return None
-            reg_model = joblib.load(os.path.join(saved_models_path, reg_files[0]))
 
             # ✅ Label encoder & scalers
             label_encoder = joblib.load(os.path.join(saved_models_path, 'GLOBAL_LABEL_ENCODER.pkl'))
@@ -628,6 +620,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
