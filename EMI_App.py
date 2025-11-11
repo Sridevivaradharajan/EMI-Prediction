@@ -22,20 +22,8 @@ from pathlib import Path
 # GOOGLE DRIVE CONFIGURATION
 # ============================================================================
 
-# Replace these with your Google Drive file IDs
-GDRIVE_CONFIG = {
-    'classification_model': 'YOUR_CLASSIFICATION_MODEL_FILE_ID',
-    'regression_model': 'YOUR_REGRESSION_MODEL_FILE_ID',
-    'label_encoder': 'YOUR_LABEL_ENCODER_FILE_ID',
-    'classification_scaler': 'YOUR_CLASSIFICATION_SCALER_FILE_ID',
-    'regression_scaler': 'YOUR_REGRESSION_SCALER_FILE_ID',
-    'model_metadata': 'YOUR_METADATA_FILE_ID',
-    'classification_features': 'YOUR_CLASSIFICATION_FEATURES_FILE_ID',
-    'regression_features': 'YOUR_REGRESSION_FEATURES_FILE_ID'
-}
-
 # Alternative: Use a shared folder ID
-GDRIVE_FOLDER_ID = 'YOUR_SHARED_FOLDER_ID'  # If all files are in one folder
+GDRIVE_FOLDER_ID = '1cUbTU0LwyNLhzRjqepxayBFpHtGYnhP0?usp=drive_link'  # If all files are in one folder
 
 # ============================================================================
 # COLOR SCHEME CONFIGURATION
@@ -597,3 +585,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
