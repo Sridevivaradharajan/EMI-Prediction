@@ -535,7 +535,7 @@ def main():
     """, unsafe_allow_html=True)
     
     # Load models from Google Drive
-    models = load_models_from_gdrive()  # or load_models_from_gdrive_folder()
+    models = load_models_from_gdrive_folder() 
     
     if models is None:
         st.error("❌ Failed to load models from Google Drive.")
@@ -585,4 +585,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
