@@ -234,8 +234,7 @@ def load_models_from_gdrive_folder():
             # ✅ Load models
             clf_model = joblib.load(os.path.join(saved_models_path, classification_model_name))
             reg_model = joblib.load(os.path.join(saved_models_path, regression_model_name))
-
-
+            
             # ✅ Label encoder & scalers
             label_encoder = joblib.load(os.path.join(saved_models_path, 'GLOBAL_LABEL_ENCODER.pkl'))
             clf_scaler = joblib.load(os.path.join(saved_models_path, 'classification_scaler.pkl'))
@@ -620,6 +619,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
