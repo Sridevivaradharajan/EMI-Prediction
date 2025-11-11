@@ -167,69 +167,104 @@ load_custom_css()
 # ============================================================================
 # GOOGLE DRIVE DOWNLOAD FUNCTIONS
 # ============================================================================
-# Alternative: Load from folder
+# ================================================================
+# ✅ IMPORTS
+# ================================================================
+import os
+import json
+import joblib
+import streamlit as st
+import tempfile
+import gdown
+
+# ================================================================
+# ✅ GOOGLE DRIVE FOLDER ID (REQUIRED)
+# ================================================================
+GDRIVE_FOLDER_ID = "PUT_YOUR_FOLDER_ID_HERE"   # <-- Replace this
+
+
+# ================================================================
+# ✅ 1. Create temporary directory for model downloads
+# ================================================================
 def setup_model_directory():
-    """
-    Creates a temporary directory to store downloaded models.
-    Returns: Absolute path of the created directory.
-    """
-    import tempfile
-    import os
-
+    """Creates a temporary directory to store downloaded models."""
     temp_dir = tempfile.mkdtemp(prefix="emi_models_")
-    
-    # Ensure directory exists
-    if not os.path.exists(temp_dir):
-        os.makedirs(temp_dir)
-
     return temp_dir
 
+
+# ================================================================
+# ✅ 2. Function to download entire Google Drive folder
+# ================================================================
+def download_folder_from_gdrive(folder_id, dest_path):
+    """
+    Downloads all files from a public Google Drive folder using gdown.
+    Returns True if successful.
+    """
+    try:
+        url = f"https://drive.google.com/drive/folders/{folder_id}"
+        gdown.download_folder(url=url, output=dest_path, quiet=False, use_cookies=False)
+        return True
+    except Exception as e:
+        print("Download failed:", e)
+        return False
+
+
+# ================================================================
+# ✅ 3. Load models from downloaded Google Drive folder
+# ================================================================
 @st.cache_resource
 def load_models_from_gdrive_folder():
-    """Load all models from a shared Google Drive folder"""
+    """Load all models from a shared Google Drive folder."""
     try:
         with st.spinner('🔄 Loading models from cloud storage...'):
-            # Create temporary directory
+
+            # ✅ Create temporary directory
             models_dir = setup_model_directory()
-            
-            # Download entire folder
+
+            # ✅ Download GDrive folder
             if not download_folder_from_gdrive(GDRIVE_FOLDER_ID, models_dir):
+                st.error("❌ Could not download Google Drive folder")
                 return None
-            
-            # Find the saved_models subdirectory
+
+            # ✅ Detect saved_models folder
             saved_models_path = None
             for root, dirs, files in os.walk(models_dir):
                 if 'saved_models' in dirs:
                     saved_models_path = os.path.join(root, 'saved_models')
                     break
-            
+
             if not saved_models_path:
                 saved_models_path = models_dir
-            
-            # Load models
-            clf_files = [f for f in os.listdir(saved_models_path) 
-                        if 'classification_model' in f and f.endswith('.pkl')]
+
+            # ✅ Classification model
+            clf_files = [f for f in os.listdir(saved_models_path)
+                         if 'classification_model' in f and f.endswith('.pkl')]
+            if len(clf_files) == 0:
+                st.error("❌ Classification model file not found.")
+                return None
             clf_model = joblib.load(os.path.join(saved_models_path, clf_files[0]))
-            
-            reg_files = [f for f in os.listdir(saved_models_path) 
-                        if 'regression_model' in f and f.endswith('.pkl')]
+
+            # ✅ Regression model
+            reg_files = [f for f in os.listdir(saved_models_path)
+                         if 'regression_model' in f and f.endswith('.pkl')]
+            if len(reg_files) == 0:
+                st.error("❌ Regression model file not found.")
+                return None
             reg_model = joblib.load(os.path.join(saved_models_path, reg_files[0]))
-            
+
+            # ✅ Label encoder & scalers
             label_encoder = joblib.load(os.path.join(saved_models_path, 'GLOBAL_LABEL_ENCODER.pkl'))
             clf_scaler = joblib.load(os.path.join(saved_models_path, 'classification_scaler.pkl'))
             reg_scaler = joblib.load(os.path.join(saved_models_path, 'regression_scaler.pkl'))
-            
-            with open(os.path.join(saved_models_path, 'model_metadata.json'), 'r') as f:
-                metadata = json.load(f)
-            
-            with open(os.path.join(saved_models_path, 'classification_features.json'), 'r') as f:
-                clf_features = json.load(f)
-            
-            with open(os.path.join(saved_models_path, 'regression_features.json'), 'r') as f:
-                reg_features = json.load(f)
-            
+
+            # ✅ Metadata + features
+            metadata = json.load(open(os.path.join(saved_models_path, 'model_metadata.json'), 'r'))
+            clf_features = json.load(open(os.path.join(saved_models_path, 'classification_features.json'), 'r'))
+            reg_features = json.load(open(os.path.join(saved_models_path, 'regression_features.json'), 'r'))
+
             st.success("✅ Models loaded successfully!")
-            
+
+            # ✅ Return all components
             return {
                 'classification_model': clf_model,
                 'regression_model': reg_model,
@@ -241,7 +276,7 @@ def load_models_from_gdrive_folder():
                 'regression_features': reg_features,
                 'temp_dir': models_dir
             }
-    
+
     except Exception as e:
         st.error(f"Error loading models: {str(e)}")
         import traceback
@@ -601,6 +636,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
