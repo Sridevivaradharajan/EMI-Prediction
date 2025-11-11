@@ -19,13 +19,6 @@ import shutil
 from pathlib import Path
 
 # ============================================================================
-# GOOGLE DRIVE CONFIGURATION
-# ============================================================================
-
-# Alternative: Use a shared folder ID
-GDRIVE_FOLDER_ID = '1cUbTU0LwyNLhzRjqepxayBFpHtGYnhP0?usp=drive_link'  # If all files are in one folder
-
-# ============================================================================
 # COLOR SCHEME CONFIGURATION
 # ============================================================================
 
@@ -180,8 +173,7 @@ import gdown
 # ================================================================
 # ✅ GOOGLE DRIVE FOLDER ID (REQUIRED)
 # ================================================================
-GDRIVE_FOLDER_ID = "PUT_YOUR_FOLDER_ID_HERE"   # <-- Replace this
-
+GDRIVE_FOLDER_ID = '1cUbTU0LwyNLhzRjqepxayBFpHtGYnhP0?usp=drive_link'
 
 # ================================================================
 # ✅ 1. Create temporary directory for model downloads
@@ -636,6 +628,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
