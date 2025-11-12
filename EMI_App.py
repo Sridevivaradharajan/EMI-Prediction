@@ -538,7 +538,7 @@ def main():
     st.markdown(f"""
         <div style='background-color: {PRIMARY}; padding: 20px; border-radius: 10px; margin-bottom: 30px;'>
             <h1 style='color: {WHITE}; text-align: center; margin: 0;'>
-                ☁️ EMI Eligibility Prediction System
+                 EMI Eligibility Prediction System
             </h1>
             <p style='color: {WHITE}; text-align: center; margin: 5px 0 0 0;'>
                 Cloud-Ready Machine Learning Application
@@ -1461,6 +1461,7 @@ def about_page():
 
 if __name__ == "__main__":
     main()
+
 
 
 
