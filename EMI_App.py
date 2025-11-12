@@ -588,5 +588,873 @@ def main():
     # should be added here from your original code
     st.info("Page functions from original code should be integrated here")
 
+# ============================================================================
+# PAGE: SINGLE PREDICTION
+# ============================================================================
+
+def single_prediction_page(models):
+    st.markdown(f"<h2 style='color: {PRIMARY};'>Single Customer Prediction</h2>", unsafe_allow_html=True)
+    
+    st.markdown(f"""
+        <div class='info-box'>
+            <p style='color: {TEXT};'>
+                Enter customer details below to predict EMI eligibility and maximum EMI amount.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "Personal Information", 
+        "Financial Details", 
+        "Loan Request", 
+        "Additional Information"
+    ])
+    
+    with tab1:
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            age = st.number_input("Age", min_value=18, max_value=100, value=30)
+            gender = st.selectbox("Gender", ["Male", "Female", "Other"])
+            education = st.selectbox(
+                "Education Level", 
+                ["High_School", "Graduate", "Post_Graduate", "Professional", "Unknown"]
+            )
+        
+        with col2:
+            employment_type = st.selectbox(
+                "Employment Type", 
+                ["Salaried", "Self_Employed", "Freelancer"]
+            )
+            years_of_employment = st.number_input(
+                "Years of Employment", 
+                min_value=0, max_value=50, value=5
+            )
+            marital_status = st.selectbox(
+                "Marital Status", 
+                ["Single", "Married", "Divorced", "Widowed"]
+            )
+    
+    with tab2:
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            monthly_salary = st.number_input(
+                "Monthly Salary (INR)", 
+                min_value=0, value=50000, step=1000
+            )
+            bank_balance = st.number_input(
+                "Bank Balance (INR)", 
+                min_value=0, value=100000, step=5000
+            )
+            credit_score = st.number_input(
+                "Credit Score", 
+                min_value=300, max_value=900, value=700
+            )
+            emergency_fund = st.number_input(
+                "Emergency Fund (INR)", 
+                min_value=0, value=50000, step=5000
+            )
+        
+        with col2:
+            current_emi_amount = st.number_input(
+                "Current EMI Amount (INR)", 
+                min_value=0, value=5000, step=500
+            )
+            monthly_rent = st.number_input(
+                "Monthly Rent (INR)", 
+                min_value=0, value=10000, step=1000
+            )
+            school_fees = st.number_input(
+                "School Fees (INR)", 
+                min_value=0, value=5000, step=500
+            )
+            college_fees = st.number_input(
+                "College Fees (INR)", 
+                min_value=0, value=0, step=500
+            )
+    
+    with tab3:
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            requested_amount = st.number_input(
+                "Requested Loan Amount (INR)", 
+                min_value=0, value=200000, step=10000
+            )
+            requested_tenure = st.number_input(
+                "Requested Tenure (Months)", 
+                min_value=6, max_value=360, value=24
+            )
+        
+        with col2:
+            emi_scenario = st.selectbox(
+                "EMI Scenario", 
+                ["Personal_Loan", "Home_Appliances", "E-commerce_Shopping", 
+                 "Education", "Vehicle"]
+            )
+    
+    with tab4:
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            family_size = st.number_input(
+                "Family Size", 
+                min_value=1, max_value=20, value=4
+            )
+            dependents = st.number_input(
+                "Number of Dependents", 
+                min_value=0, max_value=10, value=2
+            )
+            house_type = st.selectbox(
+                "House Type", 
+                ["Own", "Rented", "Family"]
+            )
+        
+        with col2:
+            travel_expenses = st.number_input(
+                "Travel Expenses (INR)", 
+                min_value=0, value=3000, step=500
+            )
+            groceries_utilities = st.number_input(
+                "Groceries & Utilities (INR)", 
+                min_value=0, value=8000, step=500
+            )
+            other_monthly_expenses = st.number_input(
+                "Other Monthly Expenses (INR)", 
+                min_value=0, value=5000, step=500
+            )
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    with col2:
+        predict_button = st.button("Predict Eligibility", use_container_width=True)
+    
+    if predict_button:
+        input_data = pd.DataFrame({
+            'age': [age],
+            'gender': [gender],
+            'education': [education],
+            'employment_type': [employment_type],
+            'years_of_employment': [years_of_employment],
+            'marital_status': [marital_status],
+            'monthly_salary': [monthly_salary],
+            'bank_balance': [bank_balance],
+            'credit_score': [credit_score],
+            'emergency_fund': [emergency_fund],
+            'current_emi_amount': [current_emi_amount],
+            'monthly_rent': [monthly_rent],
+            'school_fees': [school_fees],
+            'college_fees': [college_fees],
+            'requested_amount': [requested_amount],
+            'requested_tenure': [requested_tenure],
+            'emi_scenario': [emi_scenario],
+            'family_size': [family_size],
+            'dependents': [dependents],
+            'house_type': [house_type],
+            'travel_expenses': [travel_expenses],
+            'groceries_utilities': [groceries_utilities],
+            'other_monthly_expenses': [other_monthly_expenses]
+        })
+        
+        with st.spinner('Processing prediction...'):
+            input_with_features = engineer_features(input_data)
+            eligibility_result = predict_eligibility(input_data, models)
+            emi_amount = predict_emi_amount(input_data, models)
+        
+        if eligibility_result and emi_amount is not None:
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='color: {PRIMARY};'>Prediction Results</h3>", unsafe_allow_html=True)
+            
+            if eligibility_result['prediction'] == 'Eligible':
+                st.markdown(f"""
+                    <div class='success-box'>
+                        <h2 style='color: {SUCCESS}; margin: 0;'>Eligible</h2>
+                        <p style='color: {TEXT}; margin: 10px 0 0 0;'>
+                            The customer is eligible for EMI facility.
+                        </p>
+                    </div>
+                """, unsafe_allow_html=True)
+            elif eligibility_result['prediction'] == 'High_Risk':
+                st.markdown(f"""
+                    <div class='warning-box'>
+                        <h2 style='color: {SECONDARY}; margin: 0;'>High Risk</h2>
+                        <p style='color: {TEXT}; margin: 10px 0 0 0;'>
+                            The customer is eligible but classified as high risk.
+                        </p>
+                    </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                    <div class='danger-box'>
+                        <h2 style='color: {DANGER}; margin: 0;'>Not Eligible</h2>
+                        <p style='color: {TEXT}; margin: 10px 0 0 0;'>
+                            The customer does not meet eligibility criteria.
+                        </p>
+                    </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("Predicted Max EMI", f"INR {emi_amount:,.0f}")
+            
+            with col2:
+                st.metric("Confidence", f"{eligibility_result['confidence']*100:.1f}%")
+            
+            with col3:
+                emi_to_income = (emi_amount / monthly_salary) * 100
+                st.metric("EMI-to-Income Ratio", f"{emi_to_income:.1f}%")
+            
+            with col4:
+                financial_stability = input_with_features['financial_stability_score'].values[0]
+                st.metric("Financial Stability", f"{financial_stability:.1f}/100")
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.plotly_chart(
+                    create_probability_chart(eligibility_result['probabilities']), 
+                    use_container_width=True
+                )
+            
+            with col2:
+                st.plotly_chart(
+                    create_financial_metrics_chart(input_with_features), 
+                    use_container_width=True
+                )
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='color: {PRIMARY};'>Detailed Financial Analysis</h3>", unsafe_allow_html=True)
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.plotly_chart(
+                    create_gauge_chart(
+                        input_with_features['debt_to_income_ratio'].values[0],
+                        "Debt-to-Income Ratio (%)",
+                        100
+                    ),
+                    use_container_width=True
+                )
+            
+            with col2:
+                st.plotly_chart(
+                    create_gauge_chart(
+                        input_with_features['savings_rate'].values[0],
+                        "Savings Rate (%)",
+                        100
+                    ),
+                    use_container_width=True
+                )
+            
+            with col3:
+                st.plotly_chart(
+                    create_gauge_chart(
+                        (credit_score / 850) * 100,
+                        "Credit Score (%)",
+                        100
+                    ),
+                    use_container_width=True
+                )
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='color: {PRIMARY};'>Recommendations</h3>", unsafe_allow_html=True)
+            
+            with st.expander("View Detailed Recommendations"):
+                if eligibility_result['prediction'] == 'Eligible':
+                    st.markdown(f"""
+                        <div style='color: {TEXT};'>
+                            <h4>Approved Recommendations:</h4>
+                            <ul>
+                                <li>Maximum recommended EMI: INR {emi_amount:,.0f}</li>
+                                <li>Recommended loan tenure: {int(requested_amount/emi_amount)} months</li>
+                                <li>Maintain current credit score above 700</li>
+                                <li>Keep DTI ratio below 40%</li>
+                            </ul>
+                        </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.markdown(f"""
+                        <div style='color: {TEXT};'>
+                            <h4>Improvement Recommendations:</h4>
+                            <ul>
+                                <li>Improve credit score to above 700</li>
+                                <li>Reduce existing debt obligations</li>
+                                <li>Increase monthly savings rate</li>
+                                <li>Build emergency fund to 6 months expenses</li>
+                                <li>Consider reducing loan amount request</li>
+                            </ul>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+# ============================================================================
+# PAGE: BATCH PREDICTION
+# ============================================================================
+# ============================================================================
+# PAGE: BATCH PREDICTION (CONTINUED)
+# ============================================================================
+
+def batch_prediction_page(models):
+    st.markdown(f"<h2 style='color: {PRIMARY};'>Batch Prediction</h2>", unsafe_allow_html=True)
+    
+    st.markdown(f"""
+        <div class='info-box'>
+            <p style='color: {TEXT};'>
+                Upload a CSV file containing multiple customer records for bulk EMI eligibility prediction.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # File upload section
+    st.markdown(f"<h3 style='color: {PRIMARY};'>Upload Data</h3>", unsafe_allow_html=True)
+    
+    uploaded_file = st.file_uploader(
+        "Choose a CSV file", 
+        type=['csv'],
+        help="Upload a CSV file with customer data"
+    )
+    
+    # Template download
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Download Template CSV"):
+            template_data = {
+                'age': [30],
+                'gender': ['Male'],
+                'education': ['Graduate'],
+                'employment_type': ['Salaried'],
+                'years_of_employment': [5],
+                'marital_status': ['Married'],
+                'monthly_salary': [50000],
+                'bank_balance': [100000],
+                'credit_score': [700],
+                'emergency_fund': [50000],
+                'current_emi_amount': [5000],
+                'monthly_rent': [10000],
+                'school_fees': [5000],
+                'college_fees': [0],
+                'requested_amount': [200000],
+                'requested_tenure': [24],
+                'emi_scenario': ['Personal_Loan'],
+                'family_size': [4],
+                'dependents': [2],
+                'house_type': ['Own'],
+                'travel_expenses': [3000],
+                'groceries_utilities': [8000],
+                'other_monthly_expenses': [5000]
+            }
+            template_df = pd.DataFrame(template_data)
+            csv = template_df.to_csv(index=False)
+            st.download_button(
+                label="Download Template",
+                data=csv,
+                file_name="emi_prediction_template.csv",
+                mime="text/csv"
+            )
+    
+    if uploaded_file is not None:
+        try:
+            # Read uploaded file
+            df = pd.read_csv(uploaded_file)
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='color: {PRIMARY};'>Data Preview</h3>", unsafe_allow_html=True)
+            
+            # Show data info
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Total Records", len(df))
+            with col2:
+                st.metric("Total Columns", len(df.columns))
+            with col3:
+                missing_values = df.isnull().sum().sum()
+                st.metric("Missing Values", missing_values)
+            
+            # Display first few rows
+            st.dataframe(df.head(10), use_container_width=True)
+            
+            # Prediction button
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Run Batch Prediction", use_container_width=True):
+                with st.spinner('Processing predictions for all records...'):
+                    # Initialize result lists
+                    predictions = []
+                    emi_amounts = []
+                    confidences = []
+                    
+                    # Progress bar
+                    progress_bar = st.progress(0)
+                    status_text = st.empty()
+                    
+                    # Process each row
+                    for idx, row in df.iterrows():
+                        # Convert row to dataframe
+                        input_data = pd.DataFrame([row])
+                        
+                        # Get predictions
+                        eligibility_result = predict_eligibility(input_data, models)
+                        emi_amount = predict_emi_amount(input_data, models)
+                        
+                        if eligibility_result:
+                            predictions.append(eligibility_result['prediction'])
+                            confidences.append(eligibility_result['confidence'])
+                        else:
+                            predictions.append('Error')
+                            confidences.append(0)
+                        
+                        if emi_amount is not None:
+                            emi_amounts.append(emi_amount)
+                        else:
+                            emi_amounts.append(0)
+                        
+                        # Update progress
+                        progress = (idx + 1) / len(df)
+                        progress_bar.progress(progress)
+                        status_text.text(f'Processed {idx + 1} of {len(df)} records')
+                    
+                    # Clear progress indicators
+                    progress_bar.empty()
+                    status_text.empty()
+                    
+                    # Add results to dataframe
+                    df['Predicted_Eligibility'] = predictions
+                    df['Predicted_Max_EMI'] = emi_amounts
+                    df['Prediction_Confidence'] = confidences
+                    
+                    # Show results
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    st.markdown(f"<h3 style='color: {PRIMARY};'>Prediction Results</h3>", unsafe_allow_html=True)
+                    
+                    # Summary statistics
+                    col1, col2, col3, col4 = st.columns(4)
+                    
+                    with col1:
+                        eligible_count = (df['Predicted_Eligibility'] == 'Eligible').sum()
+                        st.metric("Eligible", f"{eligible_count} ({eligible_count/len(df)*100:.1f}%)")
+                    
+                    with col2:
+                        high_risk_count = (df['Predicted_Eligibility'] == 'High_Risk').sum()
+                        st.metric("High Risk", f"{high_risk_count} ({high_risk_count/len(df)*100:.1f}%)")
+                    
+                    with col3:
+                        not_eligible_count = (df['Predicted_Eligibility'] == 'Not_Eligible').sum()
+                        st.metric("Not Eligible", f"{not_eligible_count} ({not_eligible_count/len(df)*100:.1f}%)")
+                    
+                    with col4:
+                        avg_emi = df['Predicted_Max_EMI'].mean()
+                        st.metric("Avg Max EMI", f"INR {avg_emi:,.0f}")
+                    
+                    # Visualizations
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        # Eligibility distribution pie chart
+                        fig = go.Figure(data=[go.Pie(
+                            labels=df['Predicted_Eligibility'].value_counts().index,
+                            values=df['Predicted_Eligibility'].value_counts().values,
+                            marker=dict(colors=[SUCCESS, SECONDARY, DANGER]),
+                            hole=0.3
+                        )])
+                        fig.update_layout(
+                            title="Eligibility Distribution",
+                            paper_bgcolor=WHITE,
+                            font=dict(color=TEXT),
+                            height=400
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+                    
+                    with col2:
+                        # EMI amount distribution
+                        fig = go.Figure(data=[go.Histogram(
+                            x=df['Predicted_Max_EMI'],
+                            marker_color=PRIMARY,
+                            nbinsx=30
+                        )])
+                        fig.update_layout(
+                            title="Predicted EMI Distribution",
+                            xaxis_title="EMI Amount (INR)",
+                            yaxis_title="Count",
+                            plot_bgcolor=WHITE,
+                            paper_bgcolor=WHITE,
+                            font=dict(color=TEXT),
+                            height=400
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Confidence distribution
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    fig = go.Figure(data=[go.Box(
+                        y=df['Prediction_Confidence'],
+                        x=df['Predicted_Eligibility'],
+                        marker_color=PRIMARY
+                    )])
+                    fig.update_layout(
+                        title="Prediction Confidence by Eligibility",
+                        xaxis_title="Eligibility Status",
+                        yaxis_title="Confidence Score",
+                        plot_bgcolor=WHITE,
+                        paper_bgcolor=WHITE,
+                        font=dict(color=TEXT),
+                        height=400
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Display detailed results
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    st.markdown(f"<h3 style='color: {PRIMARY};'>Detailed Results</h3>", unsafe_allow_html=True)
+                    
+                    # Filter options
+                    filter_option = st.selectbox(
+                        "Filter by Eligibility",
+                        ["All", "Eligible", "High_Risk", "Not_Eligible"]
+                    )
+                    
+                    if filter_option != "All":
+                        filtered_df = df[df['Predicted_Eligibility'] == filter_option]
+                    else:
+                        filtered_df = df
+                    
+                    st.dataframe(filtered_df, use_container_width=True)
+                    
+                    # Download results
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    csv = df.to_csv(index=False)
+                    st.download_button(
+                        label="Download Results as CSV",
+                        data=csv,
+                        file_name=f"emi_predictions_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
+        
+        except Exception as e:
+            st.error(f"Error processing file: {str(e)}")
+            st.info("Please ensure your CSV file matches the template format.")
+
+# ============================================================================
+# PAGE: MODEL INFORMATION
+# ============================================================================
+
+def model_info_page(models):
+    st.markdown(f"<h2 style='color: {PRIMARY};'>Model Information</h2>", unsafe_allow_html=True)
+    
+    # Classification Model Info
+    st.markdown(f"<h3 style='color: {PRIMARY};'>Classification Model</h3>", unsafe_allow_html=True)
+    
+    clf_metadata = models['metadata']['classification']
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown(f"""
+            <div class='info-box'>
+                <h4 style='color: {PRIMARY};'>Model Details</h4>
+                <p style='color: {TEXT};'>
+                    <b>Algorithm:</b> {clf_metadata['best_model']}<br>
+                    <b>Preprocessing:</b> {clf_metadata['preprocessing_type']}<br>
+                    <b>Number of Classes:</b> {clf_metadata['num_classes']}<br>
+                    <b>Classes:</b> {', '.join(clf_metadata['class_names'])}
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+            <div class='info-box'>
+                <h4 style='color: {PRIMARY};'>Performance Metrics</h4>
+                <p style='color: {TEXT};'>
+                    <b>Accuracy:</b> {clf_metadata['best_metrics']['accuracy']:.4f}<br>
+                    <b>Precision:</b> {clf_metadata['best_metrics']['precision']:.4f}<br>
+                    <b>Recall:</b> {clf_metadata['best_metrics']['recall']:.4f}<br>
+                    <b>F1-Score:</b> {clf_metadata['best_metrics']['f1_score']:.4f}<br>
+                    <b>ROC-AUC:</b> {clf_metadata['best_metrics']['roc_auc']:.4f}
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    # Model comparison
+    st.markdown(f"<h4 style='color: {PRIMARY};'>Model Comparison</h4>", unsafe_allow_html=True)
+    
+    clf_results_df = pd.DataFrame(clf_metadata['all_results']).T
+    clf_results_df = clf_results_df.sort_values('f1_score', ascending=False)
+    
+    fig = go.Figure()
+    
+    metrics = ['accuracy', 'precision', 'recall', 'f1_score']
+    for metric in metrics:
+        fig.add_trace(go.Bar(
+            name=metric.replace('_', ' ').title(),
+            x=clf_results_df.index,
+            y=clf_results_df[metric]
+        ))
+    
+    fig.update_layout(
+        title="Classification Model Performance Comparison",
+        xaxis_title="Model",
+        yaxis_title="Score",
+        barmode='group',
+        plot_bgcolor=WHITE,
+        paper_bgcolor=WHITE,
+        font=dict(color=TEXT),
+        height=400
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    st.markdown("---")
+    
+    # Regression Model Info
+    st.markdown(f"<h3 style='color: {PRIMARY};'>Regression Model</h3>", unsafe_allow_html=True)
+    
+    reg_metadata = models['metadata']['regression']
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown(f"""
+            <div class='info-box'>
+                <h4 style='color: {PRIMARY};'>Model Details</h4>
+                <p style='color: {TEXT};'>
+                    <b>Algorithm:</b> {reg_metadata['best_model']}<br>
+                    <b>Preprocessing:</b> {reg_metadata['preprocessing_type']}<br>
+                    <b>Target Variable:</b> Maximum Monthly EMI
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+            <div class='info-box'>
+                <h4 style='color: {PRIMARY};'>Performance Metrics</h4>
+                <p style='color: {TEXT};'>
+                    <b>RMSE:</b> INR {reg_metadata['best_metrics']['rmse']:.2f}<br>
+                    <b>MAE:</b> INR {reg_metadata['best_metrics']['mae']:.2f}<br>
+                    <b>R² Score:</b> {reg_metadata['best_metrics']['r2_score']:.4f}<br>
+                    <b>MAPE:</b> {reg_metadata['best_metrics']['mape']:.2f}%
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    # Model comparison
+    st.markdown(f"<h4 style='color: {PRIMARY};'>Model Comparison</h4>", unsafe_allow_html=True)
+    
+    reg_results_df = pd.DataFrame(reg_metadata['all_results']).T
+    
+    fig = go.Figure()
+    
+    fig.add_trace(go.Bar(
+        name='RMSE',
+        x=reg_results_df.index,
+        y=reg_results_df['rmse'],
+        marker_color=PRIMARY
+    ))
+    
+    fig.add_trace(go.Bar(
+        name='MAE',
+        x=reg_results_df.index,
+        y=reg_results_df['mae'],
+        marker_color=SECONDARY
+    ))
+    
+    fig.update_layout(
+        title="Regression Model Error Comparison",
+        xaxis_title="Model",
+        yaxis_title="Error (INR)",
+        barmode='group',
+        plot_bgcolor=WHITE,
+        paper_bgcolor=WHITE,
+        font=dict(color=TEXT),
+        height=400
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Training Information
+    st.markdown("---")
+    st.markdown(f"<h3 style='color: {PRIMARY};'>Training Information</h3>", unsafe_allow_html=True)
+    
+    training_info = models['metadata']['training_info']
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Training Samples", f"{training_info['train_size']:,}")
+    
+    with col2:
+        st.metric("Testing Samples", f"{training_info['test_size']:,}")
+    
+    with col3:
+        st.metric("Imbalance Ratio", f"{training_info['imbalance_ratio']:.2f}:1")
+    
+    st.markdown(f"""
+        <div class='info-box'>
+            <h4 style='color: {PRIMARY};'>Training Details</h4>
+            <p style='color: {TEXT};'>
+                <b>Class Imbalance Handling:</b> {str(training_info['class_imbalance_handled'])}<br>
+                <b>Label Encoding Method:</b> {training_info['label_encoding_method']}
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+# ============================================================================
+# PAGE: ABOUT
+# ============================================================================
+
+def about_page():
+    st.markdown(f"<h2 style='color: {PRIMARY};'>About This System</h2>", unsafe_allow_html=True)
+    
+    st.markdown(f"""
+        <div class='info-box'>
+            <h3 style='color: {PRIMARY};'>Project Overview</h3>
+            <p style='color: {TEXT};'>
+                The EMI Eligibility Prediction System is an advanced machine learning application 
+                designed to automate and optimize the loan approval process. It combines 
+                classification and regression models to determine customer eligibility and 
+                predict maximum EMI amounts.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown(f"<h3 style='color: {PRIMARY};'>Key Features</h3>", unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown(f"""
+            <div class='info-box'>
+                <h4 style='color: {PRIMARY};'>Single Prediction</h4>
+                <p style='color: {TEXT};'>
+                    Predict EMI eligibility for individual customers with detailed 
+                    financial analysis and recommendations.
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(f"""
+            <div class='info-box'>
+                <h4 style='color: {PRIMARY};'>Batch Processing</h4>
+                <p style='color: {TEXT};'>
+                    Process multiple customer records simultaneously for efficient 
+                    bulk predictions and analysis.
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+            <div class='info-box'>
+                <h4 style='color: {PRIMARY};'>Real-time Analysis</h4>
+                <p style='color: {TEXT};'>
+                    Get instant predictions with confidence scores and detailed 
+                    financial metrics visualization.
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(f"""
+            <div class='info-box'>
+                <h4 style='color: {PRIMARY};'>Model Transparency</h4>
+                <p style='color: {TEXT};'>
+                    Access comprehensive model information, performance metrics, 
+                    and comparison data.
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown(f"<h3 style='color: {PRIMARY};'>Technical Specifications</h3>", unsafe_allow_html=True)
+    
+    st.markdown(f"""
+        <div class='info-box'>
+            <h4 style='color: {PRIMARY};'>Machine Learning Models</h4>
+            <p style='color: {TEXT};'>
+                <b>Classification:</b> XGBoost Classifier for eligibility prediction<br>
+                <b>Regression:</b> XGBoost Regressor for EMI amount prediction<br>
+                <b>Feature Engineering:</b> 10+ derived financial metrics<br>
+                <b>Preprocessing:</b> Advanced scaling and encoding techniques
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown(f"""
+        <div class='info-box'>
+            <h4 style='color: {PRIMARY};'>Performance Highlights</h4>
+            <p style='color: {TEXT};'>
+                <b>Classification Accuracy:</b> Greater than 95%<br>
+                <b>Regression R² Score:</b> Greater than 0.90<br>
+                <b>Processing Time:</b> Less than 100ms per prediction<br>
+                <b>Model Stability:</b> Validated on 20% holdout test set
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown(f"<h3 style='color: {PRIMARY};'>Business Impact</h3>", unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown(f"""
+            <div class='success-box'>
+                <h4 style='color: {SUCCESS};'>Efficiency</h4>
+                <p style='color: {TEXT};'>
+                    Reduce processing time from days to minutes
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+            <div class='success-box'>
+                <h4 style='color: {SUCCESS};'>Accuracy</h4>
+                <p style='color: {TEXT};'>
+                    Minimize approval errors with ML-driven decisions
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f"""
+            <div class='success-box'>
+                <h4 style='color: {SUCCESS};'>Scalability</h4>
+                <p style='color: {TEXT};'>
+                    Handle thousands of applications simultaneously
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown(f"<h3 style='color: {PRIMARY};'>Project Information</h3>", unsafe_allow_html=True)
+    
+    st.markdown(f"""
+        <div class='info-box'>
+            <p style='color: {TEXT};'>
+                <b>Author:</b> Sridevi V<br>
+                <b>Project Type:</b> Classification & Regression<br>
+                <b>Contribution:</b> Individual<br>
+                <b>Version:</b> 1.0.0<br>
+                <b>Last Updated:</b> {datetime.now().strftime('%Y-%m-%d')}
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown(f"<h3 style='color: {PRIMARY};'>Contact & Support</h3>", unsafe_allow_html=True)
+    
+    st.markdown(f"""
+        <div class='info-box'>
+            <p style='color: {TEXT};'>
+                For technical support, bug reports, or feature requests, 
+                please contact the development team.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+# ============================================================================
+# RUN APPLICATION
+# ============================================================================
+
 if __name__ == "__main__":
     main()
