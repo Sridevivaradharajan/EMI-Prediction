@@ -225,8 +225,6 @@ def load_models_from_gdrive_folder():
             clf_features = json.load(open(os.path.join(saved_models_path, 'classification_features.json'), 'r'))
             reg_features = json.load(open(os.path.join(saved_models_path, 'regression_features.json'), 'r'))
 
-            st.success("✅ Models loaded successfully!")
-
             # ✅ Return all components
             return {
                 'classification_model': clf_model,
@@ -1463,5 +1461,6 @@ def about_page():
 
 if __name__ == "__main__":
     main()
+
 
 
