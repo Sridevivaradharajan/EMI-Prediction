@@ -540,18 +540,30 @@ def main():
     st.markdown(f"""
         <div style='background-color: {PRIMARY}; padding: 20px; border-radius: 10px; margin-bottom: 30px;'>
             <h1 style='color: {WHITE}; text-align: center; margin: 0;'>
-                EMI Eligibility Prediction System
+                ☁️ EMI Eligibility Prediction System
             </h1>
             <p style='color: {WHITE}; text-align: center; margin: 5px 0 0 0;'>
-                Advanced Machine Learning Based Credit Assessment
+                Cloud-Ready Machine Learning Application
             </p>
         </div>
     """, unsafe_allow_html=True)
     
-    models = load_models()
+    # Load models from Google Drive
+    models = load_models_from_gdrive_folder() 
     
     if models is None:
-        st.error("Failed to load models. Please ensure all model files are present.")
+        st.error("❌ Failed to load models from Google Drive.")
+        st.info("""
+        **Setup Instructions:**
+        1. Upload your model files to Google Drive
+        2. Make them publicly accessible or get shareable links
+        3. Extract the file IDs from the sharing links
+        4. Update the GDRIVE_FOLDER_ID variable at the top of the code
+        
+        **Folder ID Format:**
+        From: `https://drive.google.com/drive/folders/FOLDER_ID_HERE`
+        Use: `FOLDER_ID_HERE`
+        """)
         return
     
     st.sidebar.markdown(f"<h2 style='color: {PRIMARY};'>Navigation</h2>", unsafe_allow_html=True)
@@ -567,11 +579,11 @@ def main():
             <p style='color: {TEXT};'>
                 <b>Classification Model:</b> {models['metadata']['classification']['best_model']}<br>
                 <b>Regression Model:</b> {models['metadata']['regression']['best_model']}<br>
-                <b>Status:</b> <span style='color: {SUCCESS};'>Active</span>
+                <b>Status:</b> <span style='color: {SUCCESS};'>☁️ Cloud Active</span>
             </p>
         </div>
     """, unsafe_allow_html=True)
-    
+       
     if page == "Single Prediction":
         single_prediction_page(models)
     elif page == "Batch Prediction":
@@ -1451,4 +1463,5 @@ def about_page():
 
 if __name__ == "__main__":
     main()
+
 
