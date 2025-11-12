@@ -158,35 +158,19 @@ def load_custom_css():
 load_custom_css()
 
 # ============================================================================
+# GOOGLE DRIVE CONFIGURATION
+# ============================================================================
+GDRIVE_FOLDER_ID = '1cUbTU0LwyNLhzRjqepxayBFpHtGYnhP0'
+
+# ============================================================================
 # GOOGLE DRIVE DOWNLOAD FUNCTIONS
 # ============================================================================
-# ================================================================
-# ✅ IMPORTS
-# ================================================================
-import os
-import json
-import joblib
-import streamlit as st
-import tempfile
-import gdown
 
-# ================================================================
-# ✅ GOOGLE DRIVE FOLDER ID (REQUIRED)
-# ================================================================
-GDRIVE_FOLDER_ID = '1cUbTU0LwyNLhzRjqepxayBFpHtGYnhP0?usp=drive_link'
-
-# ================================================================
-# ✅ 1. Create temporary directory for model downloads
-# ================================================================
 def setup_model_directory():
     """Creates a temporary directory to store downloaded models."""
     temp_dir = tempfile.mkdtemp(prefix="emi_models_")
     return temp_dir
 
-
-# ================================================================
-# ✅ 2. Function to download entire Google Drive folder
-# ================================================================
 def download_folder_from_gdrive(folder_id, dest_path):
     """
     Downloads all files from a public Google Drive folder using gdown.
@@ -200,10 +184,6 @@ def download_folder_from_gdrive(folder_id, dest_path):
         print("Download failed:", e)
         return False
 
-
-# ================================================================
-# ✅ 3. Load models from downloaded Google Drive folder
-# ================================================================
 @st.cache_resource
 def load_models_from_gdrive_folder():
     """Load all models from a shared Google Drive folder."""
@@ -553,7 +533,7 @@ def create_gauge_chart(value, title, max_value=100):
     return fig
 
 # ============================================================================
-# MAIN APPLICATION (continued in next part)
+# MAIN APPLICATION
 # ============================================================================
 
 def main():
@@ -578,11 +558,11 @@ def main():
         1. Upload your model files to Google Drive
         2. Make them publicly accessible or get shareable links
         3. Extract the file IDs from the sharing links
-        4. Update the GDRIVE_CONFIG dictionary at the top of the code
+        4. Update the GDRIVE_FOLDER_ID variable at the top of the code
         
-        **File ID Format:**
-        From: `https://drive.google.com/file/d/FILE_ID_HERE/view`
-        Use: `FILE_ID_HERE`
+        **Folder ID Format:**
+        From: `https://drive.google.com/drive/folders/FOLDER_ID_HERE`
+        Use: `FOLDER_ID_HERE`
         """)
         return
     
@@ -604,19 +584,9 @@ def main():
         </div>
     """, unsafe_allow_html=True)
     
-    if page == "Single Prediction":
-        single_prediction_page(models)
-    elif page == "Batch Prediction":
-        batch_prediction_page(models)
-    elif page == "Model Information":
-        model_info_page(models)
-    else:
-        about_page()
-
-# [Include all the page functions from the original code]
-# single_prediction_page(), batch_prediction_page(), 
-# model_info_page(), about_page() remain the same
+    # Note: Page functions (single_prediction_page, batch_prediction_page, etc.) 
+    # should be added here from your original code
+    st.info("Page functions from original code should be integrated here")
 
 if __name__ == "__main__":
     main()
-
