@@ -37,7 +37,7 @@ DANGER = "#E74C3C"
 
 st.set_page_config(
     page_title="EMI Eligibility Prediction System",
-    page_icon="🏦",
+    page_icon="💰",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -158,40 +158,22 @@ def load_custom_css():
 load_custom_css()
 
 # ============================================================================
-# GOOGLE DRIVE DOWNLOAD FUNCTIONS
+# GOOGLE DRIVE CONFIGURATION
 # ============================================================================
-# ================================================================
-# ✅ IMPORTS
-# ================================================================
-import os
-import json
-import joblib
-import streamlit as st
-import tempfile
-import gdown
 
-# ================================================================
-# ✅ GOOGLE DRIVE FOLDER ID (REQUIRED)
-# ================================================================
-GDRIVE_FOLDER_ID = '1cUbTU0LwyNLhzRjqepxayBFpHtGYnhP0?usp=drive_link'
+GDRIVE_FOLDER_ID = '1cUbTU0LwyNLhzRjqepxayBFpHtGYnhP0'
 
-# ================================================================
-# ✅ 1. Create temporary directory for model downloads
-# ================================================================
+# ============================================================================
+# MODEL LOADING FUNCTIONS
+# ============================================================================
+
 def setup_model_directory():
     """Creates a temporary directory to store downloaded models."""
     temp_dir = tempfile.mkdtemp(prefix="emi_models_")
     return temp_dir
 
-
-# ================================================================
-# ✅ 2. Function to download entire Google Drive folder
-# ================================================================
 def download_folder_from_gdrive(folder_id, dest_path):
-    """
-    Downloads all files from a public Google Drive folder using gdown.
-    Returns True if successful.
-    """
+    """Downloads all files from a public Google Drive folder using gdown."""
     try:
         url = f"https://drive.google.com/drive/folders/{folder_id}"
         gdown.download_folder(url=url, output=dest_path, quiet=False, use_cookies=False)
@@ -200,25 +182,20 @@ def download_folder_from_gdrive(folder_id, dest_path):
         print("Download failed:", e)
         return False
 
-
-# ================================================================
-# ✅ 3. Load models from downloaded Google Drive folder
-# ================================================================
 @st.cache_resource
 def load_models_from_gdrive_folder():
     """Load all models from a shared Google Drive folder."""
     try:
-        with st.spinner('🔄 Loading models from cloud storage...'):
-
-            # ✅ Create temporary directory
+        with st.spinner('Loading models from cloud storage...'):
+            # Create temporary directory
             models_dir = setup_model_directory()
 
-            # ✅ Download GDrive folder
+            # Download GDrive folder
             if not download_folder_from_gdrive(GDRIVE_FOLDER_ID, models_dir):
-                st.error("❌ Could not download Google Drive folder")
+                st.error("Could not download Google Drive folder")
                 return None
 
-            # ✅ Detect saved_models folder
+            # Detect saved_models folder
             saved_models_path = None
             for root, dirs, files in os.walk(models_dir):
                 if 'saved_models' in dirs:
@@ -231,23 +208,23 @@ def load_models_from_gdrive_folder():
             classification_model_name = "best_classification_model_Stacking_Ensemble.pkl"
             regression_model_name = "best_regression_model_XGBoost.pkl"
             
-            # ✅ Load models
+            # Load models
             clf_model = joblib.load(os.path.join(saved_models_path, classification_model_name))
             reg_model = joblib.load(os.path.join(saved_models_path, regression_model_name))
             
-            # ✅ Label encoder & scalers
+            # Label encoder & scalers
             label_encoder = joblib.load(os.path.join(saved_models_path, 'GLOBAL_LABEL_ENCODER.pkl'))
             clf_scaler = joblib.load(os.path.join(saved_models_path, 'classification_scaler.pkl'))
             reg_scaler = joblib.load(os.path.join(saved_models_path, 'regression_scaler.pkl'))
 
-            # ✅ Metadata + features
+            # Metadata + features
             metadata = json.load(open(os.path.join(saved_models_path, 'model_metadata.json'), 'r'))
             clf_features = json.load(open(os.path.join(saved_models_path, 'classification_features.json'), 'r'))
             reg_features = json.load(open(os.path.join(saved_models_path, 'regression_features.json'), 'r'))
 
-            st.success("✅ Models loaded successfully!")
+            st.success("Models loaded successfully!")
 
-            # ✅ Return all components
+            # Return all components
             return {
                 'classification_model': clf_model,
                 'regression_model': reg_model,
@@ -553,14 +530,552 @@ def create_gauge_chart(value, title, max_value=100):
     return fig
 
 # ============================================================================
-# MAIN APPLICATION (continued in next part)
+# PAGE FUNCTIONS
+# ============================================================================
+
+def single_prediction_page(models):
+    """Single prediction interface"""
+    st.header("Single Applicant Prediction")
+    
+    st.markdown(f"""
+        <div class='info-box'>
+            <p>Enter the applicant's information below to get instant EMI eligibility prediction and recommended EMI amount.</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.subheader("Personal Information")
+        age = st.number_input("Age", min_value=18, max_value=100, value=30)
+        gender = st.selectbox("Gender", ["Male", "Female", "Other"])
+        marital_status = st.selectbox("Marital Status", ["Single", "Married", "Divorced", "Widowed"])
+        dependents = st.number_input("Number of Dependents", min_value=0, max_value=10, value=0)
+        family_size = st.number_input("Family Size", min_value=1, max_value=15, value=1)
+        
+    with col2:
+        st.subheader("Financial Information")
+        monthly_salary = st.number_input("Monthly Salary (INR)", min_value=0, value=50000)
+        bank_balance = st.number_input("Bank Balance (INR)", min_value=0, value=100000)
+        credit_score = st.number_input("Credit Score", min_value=300, max_value=850, value=700)
+        requested_amount = st.number_input("Requested Loan Amount (INR)", min_value=0, value=500000)
+        current_emi_amount = st.number_input("Current EMI Amount (INR)", min_value=0, value=0)
+        
+    with col3:
+        st.subheader("Employment & Expenses")
+        years_of_employment = st.number_input("Years of Employment", min_value=0, max_value=50, value=5)
+        occupation = st.selectbox("Occupation", [
+            "Salaried", "Self-Employed", "Business", "Professional", "Other"
+        ])
+        school_fees = st.number_input("School Fees (Monthly, INR)", min_value=0, value=0)
+        college_fees = st.number_input("College Fees (Monthly, INR)", min_value=0, value=0)
+        travel_expenses = st.number_input("Travel Expenses (Monthly, INR)", min_value=0, value=0)
+        groceries_utilities = st.number_input("Groceries & Utilities (Monthly, INR)", min_value=0, value=10000)
+        other_monthly_expenses = st.number_input("Other Monthly Expenses (INR)", min_value=0, value=0)
+        monthly_rent = st.number_input("Monthly Rent (INR)", min_value=0, value=0)
+        emergency_fund = st.number_input("Emergency Fund (INR)", min_value=0, value=50000)
+    
+    if st.button("Predict Eligibility", use_container_width=True):
+        input_data = pd.DataFrame({
+            'age': [age],
+            'gender': [gender],
+            'marital_status': [marital_status],
+            'dependents': [dependents],
+            'family_size': [family_size],
+            'monthly_salary': [monthly_salary],
+            'bank_balance': [bank_balance],
+            'credit_score': [credit_score],
+            'requested_amount': [requested_amount],
+            'current_emi_amount': [current_emi_amount],
+            'years_of_employment': [years_of_employment],
+            'occupation': [occupation],
+            'school_fees': [school_fees],
+            'college_fees': [college_fees],
+            'travel_expenses': [travel_expenses],
+            'groceries_utilities': [groceries_utilities],
+            'other_monthly_expenses': [other_monthly_expenses],
+            'monthly_rent': [monthly_rent],
+            'emergency_fund': [emergency_fund]
+        })
+        
+        with st.spinner('Analyzing application...'):
+            eligibility_result = predict_eligibility(input_data, models)
+            emi_amount = predict_emi_amount(input_data, models)
+            input_with_features = engineer_features(input_data)
+        
+        if eligibility_result and emi_amount is not None:
+            st.markdown("---")
+            st.header("Prediction Results")
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                if eligibility_result['prediction'] == 'High':
+                    st.markdown(f"""
+                        <div class='success-box'>
+                            <h3>Eligibility Status: HIGH</h3>
+                            <p>Confidence: {eligibility_result['confidence']*100:.1f}%</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+                elif eligibility_result['prediction'] == 'Medium':
+                    st.markdown(f"""
+                        <div class='warning-box'>
+                            <h3>Eligibility Status: MEDIUM</h3>
+                            <p>Confidence: {eligibility_result['confidence']*100:.1f}%</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.markdown(f"""
+                        <div class='danger-box'>
+                            <h3>Eligibility Status: LOW</h3>
+                            <p>Confidence: {eligibility_result['confidence']*100:.1f}%</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+            
+            with col2:
+                st.metric("Maximum Recommended EMI", f"INR {emi_amount:,.2f}")
+                st.metric("Requested Amount", f"INR {requested_amount:,.2f}")
+            
+            with col3:
+                approval_percentage = (emi_amount / requested_amount * 100) if requested_amount > 0 else 0
+                st.metric("Approval Percentage", f"{min(approval_percentage, 100):.1f}%")
+                st.metric("Credit Score", credit_score)
+            
+            st.markdown("---")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.plotly_chart(create_probability_chart(eligibility_result['probabilities']), 
+                              use_container_width=True)
+            
+            with col2:
+                st.plotly_chart(create_financial_metrics_chart(input_with_features), 
+                              use_container_width=True)
+            
+            st.markdown("---")
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.plotly_chart(
+                    create_gauge_chart(
+                        input_with_features['debt_to_income_ratio'].values[0],
+                        "Debt-to-Income Ratio",
+                        100
+                    ),
+                    use_container_width=True
+                )
+            
+            with col2:
+                st.plotly_chart(
+                    create_gauge_chart(
+                        input_with_features['savings_rate'].values[0],
+                        "Savings Rate",
+                        100
+                    ),
+                    use_container_width=True
+                )
+            
+            with col3:
+                st.plotly_chart(
+                    create_gauge_chart(
+                        input_with_features['financial_stability_score'].values[0],
+                        "Financial Stability Score",
+                        100
+                    ),
+                    use_container_width=True
+                )
+
+def batch_prediction_page(models):
+    """Batch prediction interface"""
+    st.header("Batch Prediction")
+    
+    st.markdown(f"""
+        <div class='info-box'>
+            <p>Upload a CSV file containing multiple applicant records for batch processing.</p>
+            <p><strong>Required columns:</strong> age, gender, marital_status, dependents, family_size, 
+            monthly_salary, bank_balance, credit_score, requested_amount, current_emi_amount, 
+            years_of_employment, occupation, school_fees, college_fees, travel_expenses, 
+            groceries_utilities, other_monthly_expenses, monthly_rent, emergency_fund</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+    
+    if uploaded_file is not None:
+        try:
+            df = pd.read_csv(uploaded_file)
+            st.success(f"File uploaded successfully! Found {len(df)} records.")
+            
+            st.subheader("Data Preview")
+            st.dataframe(df.head(10), use_container_width=True)
+            
+            if st.button("Run Batch Prediction", use_container_width=True):
+                with st.spinner('Processing batch predictions...'):
+                    results = []
+                    progress_bar = st.progress(0)
+                    
+                    for idx, row in df.iterrows():
+                        input_data = pd.DataFrame([row])
+                        
+                        eligibility_result = predict_eligibility(input_data, models)
+                        emi_amount = predict_emi_amount(input_data, models)
+                        
+                        results.append({
+                            'Index': idx,
+                            'Eligibility': eligibility_result['prediction'] if eligibility_result else 'Error',
+                            'Confidence': f"{eligibility_result['confidence']*100:.1f}%" if eligibility_result else 'N/A',
+                            'Recommended_EMI': f"{emi_amount:,.2f}" if emi_amount else 'N/A'
+                        })
+                        
+                        progress_bar.progress((idx + 1) / len(df))
+                    
+                    results_df = pd.DataFrame(results)
+                    
+                    st.success("Batch prediction completed!")
+                    
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        high_count = (results_df['Eligibility'] == 'High').sum()
+                        st.metric("High Eligibility", high_count)
+                    
+                    with col2:
+                        medium_count = (results_df['Eligibility'] == 'Medium').sum()
+                        st.metric("Medium Eligibility", medium_count)
+                    
+                    with col3:
+                        low_count = (results_df['Eligibility'] == 'Low').sum()
+                        st.metric("Low Eligibility", low_count)
+                    
+                    st.subheader("Results")
+                    st.dataframe(results_df, use_container_width=True)
+                    
+                    csv = results_df.to_csv(index=False)
+                    st.download_button(
+                        label="Download Results as CSV",
+                        data=csv,
+                        file_name=f"emi_predictions_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
+                    
+                    fig = px.pie(
+                        results_df, 
+                        names='Eligibility', 
+                        title='Eligibility Distribution',
+                        color_discrete_map={'High': SUCCESS, 'Medium': SECONDARY, 'Low': DANGER}
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+        except Exception as e:
+            st.error(f"Error processing file: {str(e)}")
+            st.info("Please ensure your CSV file contains all required columns.")
+
+def model_info_page(models):
+    """Display model information"""
+    st.header("Model Information")
+    
+    st.markdown(f"""
+        <div class='info-box'>
+            <h3>System Overview</h3>
+            <p>This system uses advanced machine learning models to predict EMI eligibility 
+            and recommend optimal EMI amounts based on comprehensive financial analysis.</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("Classification Model")
+        st.markdown(f"""
+            <div class='success-box'>
+                <p><strong>Model Type:</strong> {models['metadata']['classification']['best_model']}</p>
+                <p><strong>Accuracy:</strong> {models['metadata']['classification']['best_score']*100:.2f}%</p>
+                <p><strong>Preprocessing:</strong> {models['metadata']['classification']['preprocessing_type']}</p>
+                <p><strong>Purpose:</strong> Predicts eligibility category (High/Medium/Low)</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        st.subheader("Classification Features")
+        with st.expander("View Features"):
+            features_df = pd.DataFrame({
+                'Feature': models['classification_features']
+            })
+            st.dataframe(features_df, use_container_width=True)
+    
+    with col2:
+        st.subheader("Regression Model")
+        st.markdown(f"""
+            <div class='success-box'>
+                <p><strong>Model Type:</strong> {models['metadata']['regression']['best_model']}</p>
+                <p><strong>R² Score:</strong> {models['metadata']['regression']['best_score']:.4f}</p>
+                <p><strong>Preprocessing:</strong> {models['metadata']['regression']['preprocessing_type']}</p>
+                <p><strong>Purpose:</strong> Predicts maximum recommended EMI amount</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        st.subheader("Regression Features")
+        with st.expander("View Features"):
+            features_df = pd.DataFrame({
+                'Feature': models['regression_features']
+            })
+            st.dataframe(features_df, use_container_width=True)
+    
+    st.markdown("---")
+    
+    st.subheader("Feature Engineering Pipeline")
+    
+    features_info = {
+        'Feature': [
+            'Debt-to-Income Ratio',
+            'Total Monthly Expenses',
+            'Expense-to-Income Ratio',
+            'Disposable Income',
+            'Savings Rate',
+            'Credit Utilization',
+            'Financial Stability Score',
+            'Dependent Ratio',
+            'Loan Burden Score',
+            'Emergency Buffer Months'
+        ],
+        'Description': [
+            'Ratio of current EMI to monthly salary',
+            'Sum of all monthly expenses',
+            'Ratio of expenses to income',
+            'Income remaining after expenses and EMI',
+            'Percentage of income saved',
+            'Requested amount vs annual income',
+            'Composite score based on multiple factors',
+            'Ratio of dependents to family size',
+            'Requested amount vs disposable income',
+            'Months of expenses covered by bank balance'
+        ],
+        'Impact': [
+            'High',
+            'Medium',
+            'High',
+            'High',
+            'Medium',
+            'High',
+            'Very High',
+            'Medium',
+            'High',
+            'Medium'
+        ]
+    }
+    
+    features_df = pd.DataFrame(features_info)
+    st.dataframe(features_df, use_container_width=True)
+    
+    st.markdown("---")
+    
+    st.subheader("Model Performance Metrics")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown(f"""
+            <div class='info-box'>
+                <h4>Classification Metrics</h4>
+                <p><strong>Accuracy:</strong> {models['metadata']['classification']['best_score']*100:.2f}%</p>
+                <p><strong>Model:</strong> {models['metadata']['classification']['best_model']}</p>
+                <p><strong>Training Date:</strong> {models['metadata']['training_date']}</p>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+            <div class='info-box'>
+                <h4>Regression Metrics</h4>
+                <p><strong>R² Score:</strong> {models['metadata']['regression']['best_score']:.4f}</p>
+                <p><strong>Model:</strong> {models['metadata']['regression']['best_model']}</p>
+                <p><strong>Training Date:</strong> {models['metadata']['training_date']}</p>
+            </div>
+        """, unsafe_allow_html=True)
+
+def about_page():
+    """About page"""
+    st.header("About EMI Eligibility Prediction System")
+    
+    st.markdown(f"""
+        <div class='info-box'>
+            <h3>System Overview</h3>
+            <p>The EMI Eligibility Prediction System is a sophisticated machine learning application 
+            designed to assess loan eligibility and recommend optimal EMI amounts based on comprehensive 
+            financial analysis.</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.subheader("Key Features")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown(f"""
+            <div class='success-box'>
+                <h4>Advanced ML Models</h4>
+                <ul>
+                    <li>Stacking Ensemble Classifier</li>
+                    <li>XGBoost Regressor</li>
+                    <li>Feature Engineering Pipeline</li>
+                    <li>Multi-metric Evaluation</li>
+                </ul>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(f"""
+            <div class='success-box'>
+                <h4>User-Friendly Interface</h4>
+                <ul>
+                    <li>Single Prediction Mode</li>
+                    <li>Batch Processing</li>
+                    <li>Interactive Visualizations</li>
+                    <li>Downloadable Reports</li>
+                </ul>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+            <div class='success-box'>
+                <h4>Comprehensive Analysis</h4>
+                <ul>
+                    <li>Financial Stability Assessment</li>
+                    <li>Risk Factor Analysis</li>
+                    <li>EMI Affordability Calculation</li>
+                    <li>Credit Score Evaluation</li>
+                </ul>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(f"""
+            <div class='success-box'>
+                <h4>Cloud-Ready Architecture</h4>
+                <ul>
+                    <li>Google Drive Integration</li>
+                    <li>Scalable Design</li>
+                    <li>Real-time Predictions</li>
+                    <li>Secure Data Processing</li>
+                </ul>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    st.subheader("How It Works")
+    
+    st.markdown("""
+        ### Step 1: Data Collection
+        The system collects comprehensive financial information including:
+        - Personal demographics (age, gender, marital status)
+        - Employment details (years of employment, occupation)
+        - Financial metrics (salary, bank balance, credit score)
+        - Expense breakdown (rent, fees, utilities, etc.)
+        - Current financial obligations (existing EMIs)
+        
+        ### Step 2: Feature Engineering
+        Advanced feature engineering creates derived metrics:
+        - Debt-to-Income Ratio
+        - Financial Stability Score
+        - Savings Rate
+        - Credit Utilization
+        - Emergency Buffer Assessment
+        
+        ### Step 3: ML Prediction
+        Two specialized models work together:
+        - **Classification Model**: Determines eligibility category (High/Medium/Low)
+        - **Regression Model**: Calculates maximum recommended EMI amount
+        
+        ### Step 4: Results & Visualization
+        The system provides:
+        - Eligibility prediction with confidence scores
+        - Recommended EMI amount
+        - Interactive charts and gauges
+        - Detailed financial analysis
+        - Downloadable reports (for batch mode)
+    """)
+    
+    st.markdown("---")
+    
+    st.subheader("Technology Stack")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown(f"""
+            <div class='info-box'>
+                <h4>Machine Learning</h4>
+                <ul>
+                    <li>Scikit-learn</li>
+                    <li>XGBoost</li>
+                    <li>Pandas</li>
+                    <li>NumPy</li>
+                </ul>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+            <div class='info-box'>
+                <h4>Visualization</h4>
+                <ul>
+                    <li>Plotly</li>
+                    <li>Streamlit</li>
+                    <li>Custom CSS</li>
+                </ul>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f"""
+            <div class='info-box'>
+                <h4>Cloud Integration</h4>
+                <ul>
+                    <li>Google Drive</li>
+                    <li>gdown</li>
+                    <li>joblib</li>
+                </ul>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    st.subheader("Developer Information")
+    
+    st.markdown(f"""
+        <div class='info-box'>
+            <p><strong>Author:</strong> Sridevi V</p>
+            <p><strong>Version:</strong> 2.0 (Cloud-Ready)</p>
+            <p><strong>Last Updated:</strong> {datetime.now().strftime('%B %Y')}</p>
+            <p><strong>Purpose:</strong> Educational and Professional Use</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    st.subheader("Disclaimer")
+    
+    st.markdown(f"""
+        <div class='warning-box'>
+            <p><strong>Important Notice:</strong></p>
+            <p>This system is designed for informational and analytical purposes. 
+            The predictions and recommendations should not be considered as final loan approval decisions. 
+            Financial institutions should use this as a decision support tool alongside their existing 
+            evaluation processes and regulatory requirements.</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+# ============================================================================
+# MAIN APPLICATION
 # ============================================================================
 
 def main():
     st.markdown(f"""
         <div style='background-color: {PRIMARY}; padding: 20px; border-radius: 10px; margin-bottom: 30px;'>
             <h1 style='color: {WHITE}; text-align: center; margin: 0;'>
-                ☁️ EMI Eligibility Prediction System
+                EMI Eligibility Prediction System
             </h1>
             <p style='color: {WHITE}; text-align: center; margin: 5px 0 0 0;'>
                 Cloud-Ready Machine Learning Application
@@ -572,17 +1087,17 @@ def main():
     models = load_models_from_gdrive_folder() 
     
     if models is None:
-        st.error("❌ Failed to load models from Google Drive.")
+        st.error("Failed to load models from Google Drive.")
         st.info("""
         **Setup Instructions:**
         1. Upload your model files to Google Drive
-        2. Make them publicly accessible or get shareable links
-        3. Extract the file IDs from the sharing links
-        4. Update the GDRIVE_CONFIG dictionary at the top of the code
+        2. Make the folder publicly accessible
+        3. Extract the folder ID from the sharing link
+        4. Update the GDRIVE_FOLDER_ID variable at the top of the code
         
-        **File ID Format:**
-        From: `https://drive.google.com/file/d/FILE_ID_HERE/view`
-        Use: `FILE_ID_HERE`
+        **Folder ID Format:**
+        From: `https://drive.google.com/drive/folders/FOLDER_ID_HERE`
+        Use: `FOLDER_ID_HERE`
         """)
         return
     
@@ -599,7 +1114,7 @@ def main():
             <p style='color: {TEXT};'>
                 <b>Classification Model:</b> {models['metadata']['classification']['best_model']}<br>
                 <b>Regression Model:</b> {models['metadata']['regression']['best_model']}<br>
-                <b>Status:</b> <span style='color: {SUCCESS};'>☁️ Cloud Active</span>
+                <b>Status:</b> <span style='color: {SUCCESS};'>Cloud Active</span>
             </p>
         </div>
     """, unsafe_allow_html=True)
@@ -613,16 +1128,5 @@ def main():
     else:
         about_page()
 
-# [Include all the page functions from the original code]
-# single_prediction_page(), batch_prediction_page(), 
-# model_info_page(), about_page() remain the same
-
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
