@@ -1,4 +1,4 @@
-# EMI Prediction & Eligibility Classification (Non-Commercial)
+# EMI Prediction & Eligibility Classification
 
 This repository contains a machine learning project with two major components:
 
