@@ -20,7 +20,9 @@ This repository contains a machine learning project with two major components:
 - Machine Learning Models:
   - Linear Regression  
   - Random Forest Regressor  
-  - Gradient Boosting Regressor  
+  - Gradient Boosting Regressor
+  - Voting Ensemble
+  - Stacking Ensemble 
 - Evaluated using RMSE, MAE, and R².
 
 ### ✅ 2. EMI Eligibility Prediction (Classification)
