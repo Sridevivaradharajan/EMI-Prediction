@@ -48,12 +48,3 @@ git clone https://github.com/Sridevivaradharajan/EMI-Prediction.git
 cd EMI-Prediction
 pip install -r requirements.txt
 ````
-
----
-
-
-## 📜 License
-
-This project is licensed under the
-**Creative Commons Attribution–NonCommercial 4.0 International (CC BY-NC 4.0)** license.
-See the **LICENSE** file for full details.
